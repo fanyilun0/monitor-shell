@@ -16,7 +16,7 @@ function set_push_frequency() {
     read -p "请输入选项（1-3）: " frequency_option
 
     case $frequency_option in
-        1) cron_time="30 * * * *" ;;            # 每分钟
+        1) cron_time="*/30 * * * *" ;;            # 每30分钟
         2) cron_time="0 * * * *" ;;             # 每小时
         3) cron_time="0 9 * * *" ;;             # 每天9点
         *) echo "无效选项。" ; return ;;
