@@ -7,6 +7,27 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
+# 设置推送频率
+function set_push_frequency() {
+    echo "选择推送频率:"
+    echo "1. 每30分钟"
+    echo "2. 每小时"
+    echo "3. 每天9点"
+    read -p "请输入选项（1-3）: " frequency_option
+
+    case $frequency_option in
+        1) cron_time="30 * * * *" ;;            # 每分钟
+        2) cron_time="0 * * * *" ;;             # 每小时
+        3) cron_time="0 9 * * *" ;;             # 每天9点
+        *) echo "无效选项。" ; return ;;
+    esac
+
+    # 修改crontab任务
+    (crontab -l | sed '/\/root\/monitor-shell\/quili-push-wx.sh/d'; echo "$cron_time /root/monitor-shell/quili-push-wx.sh >> /root/monitor-shell/quili-push-wx.log 2>&1") | crontab -
+    
+    echo "推送频率已设置为：$cron_time"
+}
+
 # 安装推送功能
 function install_push_script() {
     echo "正在安装推送功能..."
@@ -78,12 +99,11 @@ EOL
     # 赋予脚本可执行权限
     chmod +x /root/monitor-shell/quili-push-wx.sh
 
-    # 设置每分钟运行推送脚本的定时任务
-    # (crontab -l ; echo "* * * * * /root/monitor-shell/quili-push-wx.sh >> /root/monitor-shell/quili-push-wx.log 2>&1") | crontab -
-    (crontab -l | sed '/\/root\/monitor-shell\/quili-push-wx.sh/d'; echo "* * * * * /root/monitor-shell/quili-push-wx.sh >> /root/monitor-shell/quili-push-wx.log 2>&1") | crontab -
+    # 设置每小时运行推送脚本的定时任务
+    (crontab -l | sed '/\/root\/monitor-shell\/quili-push-wx.sh/d'; echo "0 * * * * /root/monitor-shell/quili-push-wx.sh >> /root/monitor-shell/quili-push-wx.log 2>&1") | crontab -
 
 
-    echo "推送功能已安装并配置为每分钟运行一次。"
+    echo "推送功能已安装并配置为每小时运行一次。"
 }
 
 # 查看推送服务日志
@@ -105,15 +125,17 @@ function main_menu() {
     echo "================================================================"
     echo "请选择要执行的操作:"
     echo "1. 安装推送功能"
-    echo "2. 查看推送服务日志"
-    echo "3. 更新本脚本"
+    echo "2. 设置推送频率"
+    echo "3. 查看推送服务日志"
+    echo "4. 更新本脚本"
     
-    read -p "请输入选项（1-3）: " OPTION
+    read -p "请输入选项（1-4）: " OPTION
 
     case $OPTION in
         1) install_push_script ;;
-        2) check_push_logs ;;
-        3) update_script ;;
+        2) set_push_frequency ;;
+        3) check_push_logs ;;
+        4) update_script ;;
         *) echo "无效选项。" ;;
     esac
 }
